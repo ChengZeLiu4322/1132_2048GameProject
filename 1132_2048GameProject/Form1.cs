@@ -107,6 +107,7 @@ namespace _1132_2048GameProject
                 _ => Color.Black
             };
         }
+        //按鍵輸入
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             // 判斷按鍵並移動數字
@@ -231,7 +232,7 @@ namespace _1132_2048GameProject
                 for (int j = i + 1; j < 4; j++)
                     (board[i, j], board[j, i]) = (board[j, i], board[i, j]);
         }
-
+        //確認遊戲結束
         private bool CheckGameOver()
         {
             for (int i = 0; i < 4; i++)
