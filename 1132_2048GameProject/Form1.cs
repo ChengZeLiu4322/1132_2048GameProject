@@ -1,4 +1,5 @@
 using System.Drawing.Text;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace _1132_2048GameProject
 {
@@ -8,6 +9,9 @@ namespace _1132_2048GameProject
         private Label[,] labels = new Label[4, 4];
         private Random rand = new Random();
         private bool goalReached = false;
+        private int score = 0;
+        private int highScore = 0;
+
         public Form1()
         {
             InitializeComponent();
@@ -74,6 +78,13 @@ namespace _1132_2048GameProject
                     labels[i, j].BackColor = GetTileColor(val);
                     labels[i, j].ForeColor = val <= 4 ? Color.Black : Color.White;
                 }
+            }
+            //紀錄分數
+            label4.Text = $"{score}";
+            if (score > highScore)
+            {
+                highScore = score;
+                label3.Text = $"{highScore}";
             }
         }
         //上色
@@ -161,6 +172,7 @@ namespace _1132_2048GameProject
                         if (index > 0 && row[index - 1] == board[i, j] && !merged)
                         {
                             row[index - 1] *= 2;
+                            score += row[index - 1]; 
                             merged = true;
                             moved = true;
                         }
@@ -253,6 +265,7 @@ namespace _1132_2048GameProject
             AddRandomTile();
             AddRandomTile();
             UpdateUI();
+            score = 0;
             goalReached = false;
         }
     }
