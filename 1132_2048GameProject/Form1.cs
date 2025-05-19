@@ -1,3 +1,5 @@
+using System.Drawing.Text;
+
 namespace _1132_2048GameProject
 {
     public partial class Form1 : Form
@@ -5,6 +7,7 @@ namespace _1132_2048GameProject
         private int[,] board = new int[4, 4];
         private Label[,] labels = new Label[4, 4];
         private Random rand = new Random();
+        private bool goalReached = false;
         public Form1()
         {
             InitializeComponent();
@@ -113,12 +116,31 @@ namespace _1132_2048GameProject
                     break;
             }
 
+
             if (moved)
             {
                 AddRandomTile();
                 UpdateUI();
                 if (CheckGameOver())
-                    MessageBox.Show("遊戲結束！");
+                {
+                    DialogResult result = MessageBox.Show("沒有可以合成的數字了，要重新來過嗎", "你輸了", MessageBoxButtons.YesNo);
+                    if (result == DialogResult.Yes)
+                    {
+                        ResetGame();
+                    }
+                }
+            }
+
+            // 判斷是否達成 2048 且尚未提示過
+            if (!goalReached && Goal())
+            {
+                goalReached = true; // 記得已經達標，避免再次提示
+                DialogResult result = MessageBox.Show("你達到 2048！是否繼續遊戲？", "恭喜！", MessageBoxButtons.YesNo);
+                if (result == DialogResult.No)
+                {
+                    this.Close(); // 若選擇不繼續，關閉遊戲
+                    return;
+                }
             }
         }
         // 移動數字
@@ -208,6 +230,30 @@ namespace _1132_2048GameProject
                         return false;
             return true;
         }
+        //達到2048，停止遊戲
+        private bool Goal() 
+        {
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++) 
+                {   
+                    if (board[i, j] == 2048)
+                    {
+                        return true;
+                    }
+                }
+            return false;
+        }
+        // 重設遊戲邏輯
+        private void ResetGame()
+        {
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                    board[i, j] = 0;
 
+            AddRandomTile();
+            AddRandomTile();
+            UpdateUI();
+            goalReached = false;
+        }
     }
 }
