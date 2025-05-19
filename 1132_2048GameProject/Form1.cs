@@ -266,6 +266,7 @@ namespace _1132_2048GameProject
             AddRandomTile();
             UpdateUI();
             score = 0;
+            label4.Text = $"{score}";
             goalReached = false;
         }
     }
