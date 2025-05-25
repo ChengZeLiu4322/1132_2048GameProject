@@ -33,6 +33,8 @@
             label2 = new Label();
             label3 = new Label();
             label4 = new Label();
+            button1 = new Button();
+            button2 = new Button();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -95,11 +97,33 @@
             label4.Text = "0";
             label4.TextAlign = ContentAlignment.MiddleCenter;
             // 
+            // button1
+            // 
+            button1.Location = new Point(644, 341);
+            button1.Name = "button1";
+            button1.Size = new Size(112, 34);
+            button1.TabIndex = 7;
+            button1.Text = "歷史紀錄";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
+            // button2
+            // 
+            button2.Location = new Point(488, 341);
+            button2.Name = "button2";
+            button2.Size = new Size(112, 34);
+            button2.TabIndex = 8;
+            button2.Text = "開始遊戲";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(11F, 23F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(button2);
+            Controls.Add(button1);
             Controls.Add(label4);
             Controls.Add(label3);
             Controls.Add(label2);
@@ -119,5 +143,7 @@
         private Label label2;
         private Label label3;
         private Label label4;
+        private Button button1;
+        private Button button2;
     }
 }

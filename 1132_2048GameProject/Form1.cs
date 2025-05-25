@@ -1,5 +1,9 @@
 using System.Drawing.Text;
 using static System.Formats.Asn1.AsnWriter;
+using System.Text.Json;
+using System.IO;
+using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace _1132_2048GameProject
 {
@@ -11,11 +15,15 @@ namespace _1132_2048GameProject
         private bool goalReached = false;
         private int score = 0;
         private int highScore = 0;
+        private const string HighScoreFilePath = "highscore.json";
+        private const string HistoryFilePath = "history.json";
+        private bool gameStarted = false;
 
         public Form1()
         {
             InitializeComponent();
             InitializeBoard();
+            LoadHighScore();
             AddRandomTile();
             AddRandomTile();
             UpdateUI();
@@ -85,7 +93,21 @@ namespace _1132_2048GameProject
             {
                 highScore = score;
                 label3.Text = $"{highScore}";
+                SaveHighScore();
             }
+        }
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (!gameStarted) return base.ProcessCmdKey(ref msg, keyData);// 若未開始，忽略方向鍵
+            // 模擬呼叫 KeyDown 方法
+            if (keyData == Keys.Left || keyData == Keys.Right || keyData == Keys.Up || keyData == Keys.Down)
+            {
+                MainForm_KeyDown(this, new KeyEventArgs(keyData));
+                return true; // 已處理，防止 base 再處理一次
+            }
+
+            // 繼續處理預設事件
+            return base.ProcessCmdKey(ref msg, keyData);
         }
         //上色
         private Color GetTileColor(int value)
@@ -135,10 +157,17 @@ namespace _1132_2048GameProject
                 UpdateUI();
                 if (CheckGameOver())
                 {
+                    SaveHistory(); // 儲存遊戲紀錄
                     DialogResult result = MessageBox.Show("沒有可以合成的數字了，要重新來過嗎", "你輸了", MessageBoxButtons.YesNo);
                     if (result == DialogResult.Yes)
                     {
                         ResetGame();
+                    }
+                    if (result == DialogResult.No)
+                    {
+                        gameStarted = false; // 停止遊戲
+                        button2.Enabled = true; // 啟用開始按鈕
+                        button1.Enabled = true; // 啟用歷史紀錄按鈕
                     }
                 }
             }
@@ -150,7 +179,8 @@ namespace _1132_2048GameProject
                 DialogResult result = MessageBox.Show("你達到 2048！是否繼續遊戲？", "恭喜！", MessageBoxButtons.YesNo);
                 if (result == DialogResult.No)
                 {
-                    this.Close(); // 若選擇不繼續，關閉遊戲
+                    button2.Enabled = true;
+                    button1.Enabled = true;
                     return;
                 }
             }
@@ -173,7 +203,7 @@ namespace _1132_2048GameProject
                         if (index > 0 && row[index - 1] == board[i, j] && !merged)
                         {
                             row[index - 1] *= 2;
-                            score += row[index - 1]; 
+                            score += row[index - 1];
                             merged = true;
                             moved = true;
                         }
@@ -244,11 +274,11 @@ namespace _1132_2048GameProject
             return true;
         }
         //達到2048，停止遊戲
-        private bool Goal() 
+        private bool Goal()
         {
             for (int i = 0; i < 4; i++)
-                for (int j = 0; j < 4; j++) 
-                {   
+                for (int j = 0; j < 4; j++)
+                {
                     if (board[i, j] == 2048)
                     {
                         return true;
@@ -269,6 +299,89 @@ namespace _1132_2048GameProject
             score = 0;
             label4.Text = $"{score}";
             goalReached = false;
+        }
+        // 儲存一筆紀錄
+        private void SaveHistory()
+        {
+            List<GameRecord> records = LoadHistory();
+            var boardList = new List<List<int>>();
+            records.Add(new GameRecord
+            {
+                Score = score,
+                Board = boardList,
+                Time = DateTime.Now
+            });
+
+            if (records.Count > 9)
+                records = records.Skip(records.Count - 9).ToList();
+
+            string json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(HistoryFilePath, json);
+        }
+        // 載入所有紀錄
+        private List<GameRecord> LoadHistory()
+        {
+            if (!File.Exists(HistoryFilePath))
+                return new List<GameRecord>();
+
+            string json = File.ReadAllText(HistoryFilePath);
+            return JsonSerializer.Deserialize<List<GameRecord>>(json) ?? new List<GameRecord>();
+        }
+        private void SaveHighScore()
+        {
+            GameRecord best = new GameRecord
+            {
+                Score = score,
+                Board = board.Cast<int>().Select((v, i) => new { v, i })
+                      .GroupBy(x => x.i / 4)
+                      .Select(g => g.Select(x => x.v).ToList())
+                      .ToList(),
+                Time = DateTime.Now
+            };
+
+            string bestJson = JsonSerializer.Serialize(best, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(HighScoreFilePath, bestJson);
+        }
+        private void LoadHighScore()
+        {
+            if (File.Exists(HighScoreFilePath))
+            {
+                try
+                {
+                    string json = File.ReadAllText(HighScoreFilePath);
+                    GameRecord best = JsonSerializer.Deserialize<GameRecord>(json);
+                    if (best != null)
+                    {
+                        highScore = best.Score;
+                        label3.Text = $"{highScore}";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("讀取高分紀錄失敗：" + ex.Message);
+                }
+            }
+        }
+        private void ShowHistory()
+        {
+            var records = LoadHistory();
+            string message = string.Join("\n", records.Select(r =>
+                $"時間：{r.Time:G}，分數：{r.Score}"));
+
+            MessageBox.Show(message, "歷史紀錄");
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ShowHistory();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            ResetGame();          // 重設遊戲
+            gameStarted = true;   // 啟用鍵盤控制
+            button2.Enabled = false; // 禁用開始按鈕，避免重複啟動
+            button1.Enabled = false;
         }
     }
 }
