@@ -312,7 +312,7 @@ namespace _1132_2048GameProject
                 Time = DateTime.Now
             });
 
-            if (records.Count > 9)
+            if (records.Count > 10)
                 records = records.Skip(records.Count - 9).ToList();
 
             string json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
